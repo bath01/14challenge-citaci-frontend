@@ -12,4 +12,13 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://api.citaci.chalenge14.com',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
 })

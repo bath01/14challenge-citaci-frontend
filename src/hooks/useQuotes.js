@@ -1,35 +1,51 @@
 import { useState, useCallback, useEffect } from "react"
-import { quotes } from "@/data/quotes"
 import { ALL_CATEGORIES_LABEL } from "@/data/categories"
 import { FADE_DURATION, MAX_HISTORY } from "@/data/constants"
+import { getRandomQuote as fetchRandomQuote, getStats } from "@/services/quoteService"
 
 /**
  * Gère la logique de sélection, filtrage et animation des citations
+ * Utilise l'API si disponible, sinon fallback sur les données locales
  */
 export function useQuotes() {
   const [currentQuote, setCurrentQuote] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES_LABEL)
   const [fadeState, setFadeState] = useState("in")
   const [history, setHistory] = useState([])
+  const [totalQuotes, setTotalQuotes] = useState(0)
+  const [loading, setLoading] = useState(false)
 
-  const getRandomQuote = useCallback(
-    (category = selectedCategory) => {
-      const pool =
-        category === ALL_CATEGORIES_LABEL
-          ? quotes
-          : quotes.filter((q) => q.category === category)
-      const available = pool.filter((q) => q.text !== currentQuote?.text)
-      const list = available.length > 0 ? available : pool
-      return list[Math.floor(Math.random() * list.length)]
+  /**
+   * Récupère une citation aléatoire depuis le service
+   */
+  const fetchNewQuote = useCallback(
+    async (category = selectedCategory) => {
+      try {
+        return await fetchRandomQuote(category)
+      } catch (error) {
+        console.error("Erreur lors du chargement de la citation :", error)
+        return null
+      }
     },
-    [selectedCategory, currentQuote]
+    [selectedCategory]
   )
 
-  // Initialisation au premier rendu
+  // Initialisation : première citation + stats
   useEffect(() => {
-    const firstQuote = getRandomQuote()
-    setCurrentQuote(firstQuote)
-    setHistory([firstQuote])
+    async function init() {
+      setLoading(true)
+      const [quote, stats] = await Promise.all([
+        fetchNewQuote(),
+        getStats().catch(() => ({ totalCitations: 0 })),
+      ])
+      if (quote) {
+        setCurrentQuote(quote)
+        setHistory([quote])
+      }
+      setTotalQuotes(stats.totalCitations)
+      setLoading(false)
+    }
+    init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -38,13 +54,15 @@ export function useQuotes() {
    */
   const generateNewQuote = useCallback(() => {
     setFadeState("out")
-    setTimeout(() => {
-      const newQuote = getRandomQuote()
-      setCurrentQuote(newQuote)
-      setHistory((prev) => [newQuote, ...prev].slice(0, MAX_HISTORY))
+    setTimeout(async () => {
+      const newQuote = await fetchNewQuote()
+      if (newQuote) {
+        setCurrentQuote(newQuote)
+        setHistory((prev) => [newQuote, ...prev].slice(0, MAX_HISTORY))
+      }
       setFadeState("in")
     }, FADE_DURATION)
-  }, [getRandomQuote])
+  }, [fetchNewQuote])
 
   /**
    * Change la catégorie et génère une citation correspondante
@@ -54,25 +72,16 @@ export function useQuotes() {
       setSelectedCategory(category)
       if (currentQuote) {
         setFadeState("out")
-        setTimeout(() => {
-          const newQuote = getRandomQuote(category)
-          setCurrentQuote(newQuote)
+        setTimeout(async () => {
+          const newQuote = await fetchNewQuote(category)
+          if (newQuote) {
+            setCurrentQuote(newQuote)
+          }
           setFadeState("in")
         }, FADE_DURATION)
       }
     },
-    [currentQuote, getRandomQuote]
-  )
-
-  /**
-   * Retourne les citations filtrées par catégorie
-   */
-  const getFilteredQuotes = useCallback(
-    (category) =>
-      category === ALL_CATEGORIES_LABEL
-        ? quotes
-        : quotes.filter((q) => q.category === category),
-    []
+    [currentQuote, fetchNewQuote]
   )
 
   return {
@@ -82,7 +91,7 @@ export function useQuotes() {
     history,
     generateNewQuote,
     changeCategory,
-    getFilteredQuotes,
-    totalQuotes: quotes.length,
+    totalQuotes,
+    loading,
   }
 }

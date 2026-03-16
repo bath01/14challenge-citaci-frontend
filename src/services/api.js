@@ -1,6 +1,6 @@
 /**
  * Configuration de base pour les appels API
- * À compléter avec l'URL du backend quand elle sera disponible
+ * En dev, les requêtes passent par le proxy Vite pour éviter les erreurs CORS
  */
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
 
@@ -9,12 +9,21 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
  * Gère les erreurs de manière centralisée
  */
 async function fetchApi(endpoint, options = {}) {
+  const { headers: customHeaders, body, ...restOptions } = options
+
+  // N'ajoute Content-Type que s'il y a un body (POST/PUT)
+  // Évite le preflight CORS inutile sur les requêtes GET
+  const headers = {
+    ...customHeaders,
+  }
+  if (body) {
+    headers["Content-Type"] = "application/json"
+  }
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
+    headers,
+    body,
+    ...restOptions,
   })
 
   if (!response.ok) {
