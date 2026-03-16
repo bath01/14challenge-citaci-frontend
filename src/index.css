@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* Animation d'apparition des cartes dans la page Explorer */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.5s ease both;
+}
+
+/* Scrollbar personnalisée aux couleurs ivoiriennes */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff8c0040;
+  border-radius: 3px;
+}
