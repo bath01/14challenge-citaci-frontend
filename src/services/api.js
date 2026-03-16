@@ -2,7 +2,7 @@
  * Configuration de base pour les appels API
  * En dev, les requêtes passent par le proxy Vite pour éviter les erreurs CORS
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+const API_BASE_URL = "https://api.citaci.chalenge14.com/api"
 
 /**
  * Effectue un appel HTTP et retourne le JSON

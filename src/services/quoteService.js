@@ -7,11 +7,6 @@ import {
 } from "@/data/categories"
 
 /**
- * Indique si l'app utilise l'API ou les données locales
- */
-const USE_API = Boolean(import.meta.env.VITE_API_URL)
-
-/**
  * Normalise une citation API vers le format interne de l'app
  * Convertit authorDescription → role et le slug catégorie → label
  */
@@ -47,8 +42,6 @@ function getLocalRandomQuote(category = ALL_CATEGORIES_LABEL) {
  * Fallback automatique sur les données locales si l'API échoue
  */
 export async function getQuotes(category = ALL_CATEGORIES_LABEL) {
-  if (!USE_API) return getLocalQuotes(category)
-
   try {
     const params =
       category !== ALL_CATEGORIES_LABEL
@@ -67,8 +60,6 @@ export async function getQuotes(category = ALL_CATEGORIES_LABEL) {
  * Fallback automatique sur les données locales si l'API échoue
  */
 export async function getRandomQuote(category = ALL_CATEGORIES_LABEL) {
-  if (!USE_API) return getLocalRandomQuote(category)
-
   try {
     const params =
       category !== ALL_CATEGORIES_LABEL
@@ -87,10 +78,6 @@ export async function getRandomQuote(category = ALL_CATEGORIES_LABEL) {
  * Fallback automatique sur un comptage local si l'API échoue
  */
 export async function getStats() {
-  if (!USE_API) {
-    return { totalCitations: localQuotes.length, totalCategories: 4 }
-  }
-
   try {
     const response = await fetchApi("/stats")
     return response.data
