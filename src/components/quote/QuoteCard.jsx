@@ -11,14 +11,15 @@ export default function QuoteCard({
   quote,
   large = false,
   fadeState = "in",
+  exportRef,
   children,
 }) {
-  const { textPrimary, textSecondary, cardBg, cardBorder, glassBg, glassBorder } =
+  const { textPrimary, textSecondary, cardBg, cardBorder, glassBg, glassBorder, bg } =
     useTheme()
 
   return (
     <div
-      className={`relative rounded-2xl transition-all duration-500 ${large ? "px-5 py-8 sm:px-10 sm:py-12" : ""}`}
+      className={`relative rounded-2xl transition-all duration-500 ${large ? "" : ""}`}
       style={{
         background: large ? glassBg : cardBg,
         backdropFilter: large ? "blur(24px)" : "blur(12px)",
@@ -33,83 +34,92 @@ export default function QuoteCard({
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      {/* Guillemet ouvrant */}
+      {/* Zone exportable (citation sans les boutons) */}
       <div
-        className="leading-none"
-        style={{
-          fontSize: large ? 64 : 36,
-          color: CI_ORANGE,
-          opacity: 0.3,
-          fontFamily: "Georgia, serif",
-          marginBottom: large ? 16 : 8,
-        }}
+        ref={exportRef}
+        className={large ? "px-5 py-8 sm:px-10 sm:py-12" : ""}
+        style={exportRef ? { background: bg, borderRadius: 16 } : undefined}
       >
-        &ldquo;
-      </div>
-
-      {/* Texte de la citation */}
-      <p
-        className={`italic font-normal ${large ? "text-lg sm:text-2xl" : ""}`}
-        style={{
-          fontSize: large ? undefined : 16,
-          lineHeight: 1.7,
-          color: textPrimary,
-          margin: `0 0 ${large ? 28 : 16}px`,
-          fontFamily: "'Playfair Display', Georgia, serif",
-        }}
-      >
-        {quote.text}
-      </p>
-
-      {/* Auteur */}
-      <div
-        className="flex items-center gap-3"
-        style={{ marginBottom: children ? 24 : 0 }}
-      >
-        <Avatar name={quote.author} size={large ? 44 : 36} />
-        <div>
-          <p
-            className="font-semibold m-0"
-            style={{
-              fontSize: large ? 15 : 13,
-              color: textPrimary,
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            {quote.author}
-          </p>
-          <p
-            className="m-0"
-            style={{
-              fontSize: large ? 13 : 11,
-              color: textSecondary,
-              marginTop: 2,
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            {quote.role}
-          </p>
+        {/* Guillemet ouvrant */}
+        <div
+          className="leading-none"
+          style={{
+            fontSize: large ? 64 : 36,
+            color: CI_ORANGE,
+            opacity: 0.3,
+            fontFamily: "Georgia, serif",
+            marginBottom: large ? 16 : 8,
+          }}
+        >
+          &ldquo;
         </div>
-        <CategoryBadge category={quote.category} />
+
+        {/* Texte de la citation */}
+        <p
+          className={`italic font-normal ${large ? "text-lg sm:text-2xl" : ""}`}
+          style={{
+            fontSize: large ? undefined : 16,
+            lineHeight: 1.7,
+            color: textPrimary,
+            margin: `0 0 ${large ? 28 : 16}px`,
+            fontFamily: "'Playfair Display', Georgia, serif",
+          }}
+        >
+          {quote.text}
+        </p>
+
+        {/* Auteur */}
+        <div
+          className="flex items-center gap-3"
+          style={{ marginBottom: exportRef ? 0 : children ? 24 : 0 }}
+        >
+          <Avatar name={quote.author} size={large ? 44 : 36} />
+          <div>
+            <p
+              className="font-semibold m-0"
+              style={{
+                fontSize: large ? 15 : 13,
+                color: textPrimary,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {quote.author}
+            </p>
+            <p
+              className="m-0"
+              style={{
+                fontSize: large ? 13 : 11,
+                color: textSecondary,
+                marginTop: 2,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {quote.role}
+            </p>
+          </div>
+          <CategoryBadge category={quote.category} />
+        </div>
+
+        {/* Guillemet fermant */}
+        <div
+          className={exportRef ? "text-right" : "absolute"}
+          style={{
+            ...(exportRef
+              ? {}
+              : { bottom: large ? 36 : 20, right: large ? 32 : 20 }),
+            fontSize: large ? 64 : 36,
+            color: CI_GREEN,
+            opacity: 0.2,
+            fontFamily: "Georgia, serif",
+            lineHeight: 1,
+          }}
+        >
+          &rdquo;
+        </div>
       </div>
 
-      {/* Zone d'actions (boutons) injectée via children */}
-      {children}
-
-      {/* Guillemet fermant */}
-      <div
-        className="absolute leading-none"
-        style={{
-          bottom: large ? 36 : 20,
-          right: large ? 32 : 20,
-          fontSize: large ? 64 : 36,
-          color: CI_GREEN,
-          opacity: 0.2,
-          fontFamily: "Georgia, serif",
-        }}
-      >
-        &rdquo;
-      </div>
+      {/* Zone d'actions (boutons) hors de la zone exportable */}
+      {children && <div className={large ? "px-5 sm:px-10 pb-8 sm:pb-12" : ""}>{children}</div>}
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { useQuotes } from "@/hooks/useQuotes"
 import { useFavorites } from "@/hooks/useFavorites"
 import { useClipboard } from "@/hooks/useClipboard"
 import { useShare } from "@/hooks/useShare"
+import { useTextToSpeech } from "@/hooks/useTextToSpeech"
+import { useExportImage } from "@/hooks/useExportImage"
 import { CI_ORANGE } from "@/data/constants"
 
 import Navbar from "@/components/layout/Navbar"
@@ -31,7 +33,9 @@ export default function App() {
 
   const { favorites, toggleFavorite, isFavorite } = useFavorites()
   const { copied, copyToClipboard } = useClipboard()
-  const { shared, shareOnTwitter } = useShare()
+  const { shared, shareQuote } = useShare()
+  const { speaking, toggleSpeech, stopSpeech } = useTextToSpeech()
+  const { exporting, exported, exportAsImage } = useExportImage()
 
   /**
    * Copie la citation courante dans le presse-papier
@@ -42,9 +46,17 @@ export default function App() {
   }
 
   /**
-   * Partage la citation courante sur Twitter
+   * Partage la citation via Web Share API ou fallback Twitter
    */
-  const handleShare = () => shareOnTwitter(currentQuote)
+  const handleShare = () => shareQuote(currentQuote)
+
+  /**
+   * Lit la citation à voix haute ou stoppe la lecture
+   */
+  const handleSpeak = () => {
+    if (!currentQuote) return
+    toggleSpeech(`${currentQuote.text}. Par ${currentQuote.author}.`)
+  }
 
   return (
     <div
@@ -58,7 +70,10 @@ export default function App() {
       <GradientOrbs />
       <Navbar
         currentPage={page}
-        onNavigate={setPage}
+        onNavigate={(p) => {
+          stopSpeech()
+          setPage(p)
+        }}
         favoritesCount={favorites.length}
       />
       {/* Spacer pour compenser la navbar fixée */}
@@ -72,14 +87,22 @@ export default function App() {
           history={history}
           totalQuotes={totalQuotes}
           favoritesCount={favorites.length}
-          onNewQuote={generateNewQuote}
+          onNewQuote={() => {
+            stopSpeech()
+            generateNewQuote()
+          }}
           onCategoryChange={changeCategory}
           onCopy={handleCopy}
           onShare={handleShare}
           onToggleFavorite={() => currentQuote && toggleFavorite(currentQuote)}
+          onSpeak={handleSpeak}
+          onExportImage={exportAsImage}
           copied={copied}
           shared={shared}
           isFavorite={isFavorite(currentQuote)}
+          speaking={speaking}
+          exporting={exporting}
+          exported={exported}
         />
       )}
       {page === "explore" && (
